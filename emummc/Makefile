@@ -6,7 +6,7 @@ endif
 
 TARGET		:=	emummc
 BUILD		:=	build
-SOURCES		:=	source/nx source source/utils source/emmc source/soc source/power source/emuMMC source/FS source/libs/fatfs
+SOURCES		:=	source/nx source source/utils source/emmc source/soc source/power source/emuMMC source/FS source/libs/fatfs source/usb
 DATA		:=	data
 INCLUDES	:=	include
 EXEFS_SRC	:=	exefs_src

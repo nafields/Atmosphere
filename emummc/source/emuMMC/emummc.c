@@ -22,6 +22,7 @@
 #include "emummc_ctx.h"
 #include "../utils/fatal.h"
 #include "../libs/fatfs/diskio.h"
+#include "../usb/usb_emummc.h"
 
 static bool sdmmc_first_init = false;
 static bool storageSDinitialized = false;
@@ -132,6 +133,19 @@ static void _nand_patrol_ensure_integrity(void)
                 sdmmc_storage_write(&sd_storage, nand_patrol_sector, 1, &nand_patrol);
             }
         }
+        else if (emuMMC_ctx.EMMC_Type == emuMMC_USB_Raw)
+        {
+            unsigned int nand_patrol_sector = emuMMC_ctx.EMMC_StoragePartitionOffset + NAND_PATROL_SECTOR;
+            if (!usb_emummc_read(nand_patrol_sector, 1, &nand_patrol))
+                goto out;
+
+            // Clear nand patrol if last offset exceeds storage.
+            if (nand_patrol.offset > usb_emummc_get_sector_count())
+            {
+                memset(&nand_patrol, 0, sizeof(fs_nand_patrol_t));
+                usb_emummc_write(nand_patrol_sector, 1, &nand_patrol);
+            }
+        }
         else if (emuMMC_ctx.EMMC_Type == emuMMC_SD_File && fat_mounted)
         {
             FIL *fp = &f_emu.fp_boot0;
@@ -167,6 +181,19 @@ void sdmmc_finalize(void)
         fatal_abort(Fatal_InitSD);
 
     storageSDinitialized = false;
+}
+
+// USB backed emuMMC: bring the drive up (first access, after sleep, after a
+// controller close) and run the one-time checks.
+static void _usb_emummc_ensure_initialized(void)
+{
+    if (usb_emummc_is_ready())
+        return;
+
+    usb_emummc_initialize();
+
+    // Check if nand patrol offset is inside limits.
+    _nand_patrol_ensure_integrity();
 }
 
 static void _file_based_emmc_initialize(void)
@@ -250,7 +277,9 @@ bool sdmmc_initialize(void)
                 }
 
                 // Check if nand patrol offset is inside limits.
-                _nand_patrol_ensure_integrity();
+                // (USB emuMMC does this itself once the drive is up.)
+                if (emuMMC_ctx.EMMC_Type != emuMMC_USB_Raw)
+                    _nand_patrol_ensure_integrity();
 
                 break;
             }
@@ -319,6 +348,22 @@ int sdmmc_nand_get_active_partition_index()
 
 static uint64_t emummc_read_write_inner(void *buf, unsigned int sector, unsigned int num_sectors, bool is_write)
 {
+    if (emuMMC_ctx.EMMC_Type == emuMMC_USB_Raw)
+    {
+        // raw image sector offset on the USB drive: emuMMC_ctx.EMMC_StoragePartitionOffset.
+        sector += emuMMC_ctx.EMMC_StoragePartitionOffset;
+        // Set physical partition offset.
+        sector += (sdmmc_nand_get_active_partition_index() * BOOT_PARTITION_SIZE);
+
+        if (__builtin_expect(sector + num_sectors > usb_emummc_get_sector_count(), 0))
+            return 0; // Out of bounds. Can only happen with Nand Patrol if resized.
+
+        if (!is_write)
+            return usb_emummc_read(sector, num_sectors, buf);
+        else
+            return usb_emummc_write(sector, num_sectors, buf);
+    }
+
     if (emuMMC_ctx.EMMC_Type == emuMMC_SD_Raw)
     {
         // raw partition sector offset: emuMMC_ctx.EMMC_StoragePartitionOffset.
@@ -441,6 +486,10 @@ uint64_t sdmmc_wrapper_controller_close(int mmc_id)
             // Close file handles and unmount
             _file_based_emmc_finalize();
 
+            // Stop the USB host (sleep/shutdown). The next access restarts it.
+            if (emuMMC_ctx.EMMC_Type == emuMMC_USB_Raw)
+                usb_emummc_finalize();
+
             // Close SD
             sdmmc_accessor_get(FS_SDMMC_SD)->vtab->sdmmc_accessor_controller_close(sdmmc_accessor_get(FS_SDMMC_SD));
 
@@ -464,7 +513,15 @@ uint64_t sdmmc_wrapper_read(void *buf, uint64_t bufSize, int mmc_id, unsigned in
 
     if (_this != NULL)
     {
-        if (mmc_id == FS_SDMMC_EMMC || mmc_id == FS_SDMMC_SD)
+        if (mmc_id == FS_SDMMC_EMMC && emuMMC_ctx.EMMC_Type == emuMMC_USB_Raw)
+        {
+            mutex_lock_handler(mmc_id);
+            _current_accessor = _this;
+            // The eMMC lives on the USB drive: the SD card is only needed
+            // once, for the XUSB firmware, and that init happens in here.
+            _usb_emummc_ensure_initialized();
+        }
+        else if (mmc_id == FS_SDMMC_EMMC || mmc_id == FS_SDMMC_SD)
         {
             mutex_lock_handler(mmc_id);
             // Assign FS accessor to the SDMMC driver
@@ -490,15 +547,17 @@ uint64_t sdmmc_wrapper_read(void *buf, uint64_t bufSize, int mmc_id, unsigned in
 
         if (mmc_id == FS_SDMMC_SD)
         {
-            static bool first_sd_read = true;
-            if (first_sd_read)
+            static bool driver_swapped = false;
+            if (!driver_swapped)
             {
-                first_sd_read = false;
-                if (emuMMC_ctx.EMMC_Type == emuMMC_SD_Raw)
+                // Because some SD cards have issues with emuMMC's driver
+                // we currently swap to FS's driver after first SD read
+                // for raw based emuMMC. A USB emuMMC needs the SD card once,
+                // for the XUSB firmware file, so it swaps after that read.
+                if (emuMMC_ctx.EMMC_Type == emuMMC_SD_Raw ||
+                    (emuMMC_ctx.EMMC_Type == emuMMC_USB_Raw && usb_emummc_firmware_loaded()))
                 {
-                    // Because some SD cards have issues with emuMMC's driver
-                    // we currently swap to FS's driver after first SD read
-                    // for raw based emuMMC
+                    driver_swapped = true;
                     custom_driver = false;
                     // FS will handle sd mutex w/o custom driver from here on
                     unlock_mutex(sd_mutex);
@@ -537,6 +596,9 @@ uint64_t sdmmc_wrapper_write(int mmc_id, unsigned int sector, unsigned int num_s
         {
             mutex_lock_handler(mmc_id);
             _current_accessor = _this;
+
+            if (emuMMC_ctx.EMMC_Type == emuMMC_USB_Raw)
+                _usb_emummc_ensure_initialized();
 
             // Call hekates driver.
             if (emummc_read_write_inner(buf, sector, num_sectors, true))

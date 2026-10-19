@@ -94,6 +94,8 @@ Result smcCopyToIram(uintptr_t iram_addr, const void *src_addr, u32 size);
 Result smcCopyFromIram(void *dst_addr, uintptr_t iram_addr, u32 size);
 
 Result smcReadWriteRegister(u32 phys_addr, u32 value, u32 mask);
+/* Same, returning the value read before the write (mask 0 = read only). */
+Result smcReadWriteRegisterOut(u32 phys_addr, u32 value, u32 mask, u32 *out);
 
 Result smcGetEmummcConfig(exo_emummc_mmc_t mmc_id, exo_emummc_config_t *out_cfg, void *out_paths);
 

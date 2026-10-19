@@ -33,6 +33,8 @@ enum emuMMC_Type
     emuMMC_SD_Raw,
     // SD Device File
     emuMMC_SD_File,
+    // Raw image on a USB mass storage drive (same layout as SD raw)
+    emuMMC_USB_Raw,
 
     emuMMC_MAX
 };

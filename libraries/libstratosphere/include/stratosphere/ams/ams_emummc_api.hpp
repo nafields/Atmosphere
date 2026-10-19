@@ -22,6 +22,9 @@ namespace ams::emummc {
     /* Get whether emummc is active. */
     bool IsActive();
 
+    /* Get whether the active emummc is a raw image on a USB mass storage drive. */
+    bool IsUsbBased();
+
     /* Get the active emummc id. */
     u32 GetActiveId();
 

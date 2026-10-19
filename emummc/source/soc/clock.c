@@ -24,6 +24,10 @@ static const sclock_t _clock_i2c5 = {
 	CLK_RST_CONTROLLER_RST_DEVICES_H, CLK_RST_CONTROLLER_CLK_OUT_ENB_H, CLK_RST_CONTROLLER_CLK_SOURCE_I2C5, 0xF, 0, 4 //81.6MHz -> 400KHz
 };
 
+static const sclock_t _clock_i2c1 = {
+	CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_I2C1, CLK_L_I2C1, 0, 19 //81.6MHz -> 100KHz
+};
+
 static sclock_t _clock_sdmmc_legacy_tm = {
 	CLK_RST_CONTROLLER_RST_DEVICES_Y, CLK_RST_CONTROLLER_CLK_OUT_ENB_Y, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC_LEGACY_TM, 1, 4, 66
 };
@@ -61,6 +65,50 @@ void clock_enable_i2c5()
 void clock_disable_i2c5()
 {
 	clock_disable(&_clock_i2c5);
+}
+
+void clock_enable_i2c1()
+{
+	// Already running (the charger and fuel gauge live on it): leave it be.
+	if ((CLOCK(_clock_i2c1.enable) & (1 << _clock_i2c1.index)) &&
+		!(CLOCK(_clock_i2c1.reset) & (1 << _clock_i2c1.index)))
+		return;
+	clock_enable(&_clock_i2c1);
+}
+
+void clock_enable_pllu()
+{
+	// Configure PLLU.
+	CLOCK(CLK_RST_CONTROLLER_PLLU_MISC) |= (1 << 29); // Disable reference clock.
+	u32 pllu_cfg = (CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) & 0xFFE00000) | (1 << 24) | (1 << 16) | (0x19 << 8) | 2;
+	CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) = pllu_cfg;
+	CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) = pllu_cfg | PLLCX_BASE_ENABLE; // Enable.
+
+	// Wait for PLL to stabilize.
+	u64 timeout = get_tmr_us() + 1300;
+	while (!(CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) & PLLCX_BASE_LOCK)) // PLL_LOCK.
+		if (get_tmr_us() > timeout)
+			break;
+	usleep(10);
+
+	// Enable PLLU USB/HSIC/ICUSB/48M.
+	CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) |= 0x2E00000;
+}
+
+void clock_enable_utmipll()
+{
+	// Set UTMIPLL dividers and config based on OSC and enable it to 960 MHz.
+	CLOCK(CLK_RST_CONTROLLER_UTMIP_PLL_CFG0) = (CLOCK(CLK_RST_CONTROLLER_UTMIP_PLL_CFG0) & 0xFF0000FF) | (25 << 16) | (1 << 8); // 38.4Mhz * (25 / 1) = 960 MHz.
+	CLOCK(CLK_RST_CONTROLLER_UTMIP_PLL_CFG2) = (CLOCK(CLK_RST_CONTROLLER_UTMIP_PLL_CFG2) & 0xFF00003F) | (24 << 18); // Set delay count for 38.4Mhz osc crystal.
+	CLOCK(CLK_RST_CONTROLLER_UTMIP_PLL_CFG1) = (CLOCK(CLK_RST_CONTROLLER_UTMIP_PLL_CFG1) &  0x7FFA000) | (1 << 15) | 375;
+
+	// Wait for UTMIPLL to stabilize.
+	u32 retries = 10; // Wait 20us
+	while (!(CLOCK(CLK_RST_CONTROLLER_UTMIPLL_HW_PWRDN_CFG0) & UTMIPLL_LOCK) && retries)
+	{
+		usleep(1);
+		retries--;
+	}
 }
 
 static void _clock_enable_pllc4()

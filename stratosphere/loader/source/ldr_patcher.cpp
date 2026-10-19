@@ -22,6 +22,10 @@ namespace ams::ldr {
 
         constexpr const char *NsoPatchesDirectory = "exefs_patches";
 
+        /* Patch sets that only apply when the active emummc is a USB drive. The emummc module then
+         * owns the XUSB host controller, and the usb sysmodule has to be kept off it. */
+        constexpr const char *UsbEmummcNsoPatchesDirectory = "usb_emummc_patches";
+
         /* Exefs patches want to prevent modification of header, */
         /* and also want to adjust offset relative to mapped location. */
         constexpr size_t NsoPatchesProtectedSize   = sizeof(NsoHeader);
@@ -120,6 +124,10 @@ namespace ams::ldr {
         ro::ModuleId module_id;
         std::memcpy(std::addressof(module_id.data), module_id_data, sizeof(module_id.data));
         ams::patcher::LocateAndApplyIpsPatchesToModule(LoaderSdMountName, NsoPatchesDirectory, NsoPatchesProtectedSize, NsoPatchesProtectedOffset, std::addressof(module_id), reinterpret_cast<u8 *>(mapped_nso), mapped_size);
+
+        if (emummc::IsUsbBased()) {
+            ams::patcher::LocateAndApplyIpsPatchesToModule(LoaderSdMountName, UsbEmummcNsoPatchesDirectory, NsoPatchesProtectedSize, NsoPatchesProtectedOffset, std::addressof(module_id), reinterpret_cast<u8 *>(mapped_nso), mapped_size);
+        }
     }
 
     /* Apply embedded patches. */

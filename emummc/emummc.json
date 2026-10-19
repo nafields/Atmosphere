@@ -47,6 +47,33 @@
             }
         },
         {
+            "type": "map",
+            "value": {
+                "address": "0x7000F000",
+                "is_ro": false,
+                "size": "0x00001000",
+                "is_io": true
+            }
+        },
+        {
+            "type": "map",
+            "value": {
+                "address": "0x70090000",
+                "is_ro": false,
+                "size": "0x00010000",
+                "is_io": true
+            }
+        },
+        {
+            "type": "map",
+            "value": {
+                "address": "0x7009F000",
+                "is_ro": false,
+                "size": "0x00001000",
+                "is_io": true
+            }
+        },
+        {
             "type": "handle_table_size",
             "value": 256
         },

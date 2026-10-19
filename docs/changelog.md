@@ -1,4 +1,11 @@
 # Changelog
+## 1.9.4 (unreleased)
++ Experimental support was added for an emuMMC stored on a USB mass storage drive (SSD, HDD or flash drive), connected directly or through the dock.
+  + `emummc` gained an XHCI host and USB mass storage driver and a new emuMMC type (`3`), which hekate selects for a USB emuMMC.
+  + `exosphère` accepts the new type in the emuMMC configuration, and the emuMMC type config item reports `3` for it.
+  + `loader` applies patch sets from `/atmosphere/usb_emummc_patches/` only on such a boot, so the `usb` system module can be kept off the host controller.
+  + Please see [the documentation](features/usb_emummc.md) for the requirements and the current limitations. Booting this way requires hekate; fusee reports an error.
++ General system stability improvements to enhance the user's experience.
 ## 1.9.3
 + Basic support was added for 20.3.0.
 + Compatibility was fixed for loading mods with KOTOR 2 (star wars).

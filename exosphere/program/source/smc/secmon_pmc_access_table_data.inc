@@ -31,6 +31,7 @@ SetRegisterAllowed(APBDEV_PMC_PWR_DET);              /* 0x048 */
 SetRegisterAllowed(APBDEV_PMC_AUTO_WAKE_LVL_MASK);   /* 0x0DC */
 SetRegisterAllowed(APBDEV_PMC_WAKE_DELAY);           /* 0x0E0 */
 SetRegisterAllowed(APBDEV_PMC_PWR_DET_VAL);          /* 0x0E4 */
+SetRegisterAllowed(APBDEV_PMC_USB_AO);               /* 0x0F0 */
 SetRegisterAllowed(APBDEV_PMC_WAKE2_MASK);           /* 0x160 */
 SetRegisterAllowed(APBDEV_PMC_WAKE2_LVL);            /* 0x164 */
 SetRegisterAllowed(APBDEV_PMC_WAKE2_STATUS);         /* 0x168 */

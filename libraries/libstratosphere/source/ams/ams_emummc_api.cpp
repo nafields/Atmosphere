@@ -52,6 +52,7 @@ namespace ams::emummc {
             Storage_Emmc,
             Storage_Sd,
             Storage_SdFile,
+            Storage_Usb,
 
             Storage_Count,
         };
@@ -60,6 +61,7 @@ namespace ams::emummc {
         constinit os::SdkMutex g_lock;
         constinit ExosphereConfig g_exo_config = {};
         constinit bool g_is_emummc;
+        constinit bool g_is_usb;
         constinit bool g_has_cached;
 
         /* Helpers. */
@@ -85,6 +87,7 @@ namespace ams::emummc {
 
                 const Storage storage = static_cast<Storage>(g_exo_config.base_cfg.type);
                 g_is_emummc = g_exo_config.base_cfg.magic == StorageMagic && storage != Storage_Emmc;
+                g_is_usb    = g_is_emummc && storage == Storage_Usb;
 
                 /* Format paths. */
                 {
@@ -116,6 +119,12 @@ namespace ams::emummc {
     bool IsActive() {
         CacheValues();
         return g_is_emummc;
+    }
+
+    /* Get whether the active emummc is a raw image on a USB mass storage drive. */
+    bool IsUsbBased() {
+        CacheValues();
+        return g_is_usb;
     }
 
     /* Get the active emummc id. */

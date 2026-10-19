@@ -69,19 +69,24 @@ startup:
     # Inject start
     push_all
 
-    MOV W0, #0xFFFF8001
-    ADR X1, __rodata_start
-    ADR X2, __data_start
-    SUB X2, X2, X1
-    MOV X3, #1
-    SVC 0x73
+    # ADRP/ADD: the DMA pool in .bss puts __argdata__ out of ADR range (+-1 MiB).
+    MOV  W0, #0xFFFF8001
+    ADRP X1, __rodata_start
+    ADD  X1, X1, #:lo12:__rodata_start
+    ADRP X2, __data_start
+    ADD  X2, X2, #:lo12:__data_start
+    SUB  X2, X2, X1
+    MOV  X3, #1
+    SVC  0x73
 
-    MOV W0, #0xFFFF8001
-    ADR X1, __data_start
-    ADR X2, __argdata__
-    SUB X2, X2, X1
-    MOV X3, #3
-    SVC 0x73
+    MOV  W0, #0xFFFF8001
+    ADRP X1, __data_start
+    ADD  X1, X1, #:lo12:__data_start
+    ADRP X2, __argdata__
+    ADD  X2, X2, #:lo12:__argdata__
+    SUB  X2, X2, X1
+    MOV  X3, #3
+    SVC  0x73
 
     pop_all
 

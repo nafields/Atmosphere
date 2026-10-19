@@ -38,7 +38,7 @@ The emuMMC `Nintendo` folder, the `atmosphere` folder and everything else Atmosp
 
 The console has one usable USB controller. On a normal boot the `usb` system module resets it and takes it over for USB device mode (connecting to a PC) and for USB host mode in the dock. On a USB emuMMC boot the `emummc` module owns the controller instead, and the kernel keeps the controller's DMA attached to the `FS` process. If `usb` then tries to take it, `usb` fails to start and the system shows a fatal error.
 
-`usb` therefore needs executable patches that make its XUSB host and device bring-up return early. The patches are specific to each Horizon version and are **not included yet**. They are applied by `loader` from
+`usb` therefore needs executable patches that make its XUSB host and device bring-up return early. The patches are specific to each Horizon version (one per build id of the `usb` main NSO) and are **not included yet**: they have to be authored from that version's NSO, which is not distributed with Atmosphère. `utilities/usb_emummc_patches/` has the authoring tool (`usb_emummc_patch.py`: build id, decompression, a finder for the code and tables that reference the XUSB register blocks, and the IPS writer) and the procedure; verified patch sets go into `config_templates/usb_emummc_patches/` and are copied into the release by `make dist`. They are applied by `loader` from
 
 ```
 /atmosphere/usb_emummc_patches/<patchset name>/<nso build id>.ips
@@ -71,7 +71,7 @@ If the drive cannot be used the module reboots to the fatal error screen with on
 ## Limitations
 
 - Untested on hardware. The driver was ported from hekate's, which was itself specified and reviewed but not yet exercised on a console.
-- No `usb` system module patches ship yet. Until they exist for your Horizon version, the boot ends in a fatal error when `usb` starts.
+- No `usb` system module patches ship yet. Until they exist for your Horizon version (see `utilities/usb_emummc_patches/README.md`), the boot ends in a fatal error when `usb` starts.
 - USB 2.0 High Speed only.
 - The module reserves about 800 KiB of memory in `FS` for the DMA block, on every boot, whichever emuMMC type is active.
 - A drive that disappears while the console runs is fatal, like a removed eMMC would be.

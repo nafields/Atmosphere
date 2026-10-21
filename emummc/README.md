@@ -13,6 +13,8 @@
   **This allows loading eMMC images from hekate-backups (split or not)**
 * SDMMC device based sector offset (*currently eMMC only*)  
   **Raw partition support for eMMC from SD with less performance overhead**
+* USB mass storage backend (*eMMC only*, type `3`)  
+  **Raw emuMMC image on a USB SSD/HDD/flash drive, read with a built-in XHCI host driver. See `docs/features/usb_emummc.md` in the Atmosphère repository.**
 * Full support for `/Nintendo` folder redirection to a arbitrary path  
   **No 8 char length restriction!**
 * exosphere based context configuration  

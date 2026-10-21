@@ -130,6 +130,7 @@ namespace ams::nxboot {
 
             /* Parse ini. */
             bool enabled = false;
+            bool usb_enabled = false;
             u32 id = 0;
             u32 sector = 0;
             const char *path = "";
@@ -155,6 +156,8 @@ namespace ams::nxboot {
                                 path = entry.value;
                             } else if (std::strcmp(entry.key, "nintendo_path") == 0) {
                                 n_path = entry.value;
+                            } else if (std::strcmp(entry.key, "usb_enabled") == 0) {
+                                usb_enabled = ParseDecimalInteger(entry.value) != 0;
                             }
                         }
                     }
@@ -167,7 +170,10 @@ namespace ams::nxboot {
             g_emummc_cfg.emu_dir_path.str[sizeof(g_emummc_cfg.emu_dir_path.str) - 1] = '\x00';
 
             if (enabled) {
-                if (sector > 0) {
+                if (usb_enabled) {
+                    /* A USB drive based emummc needs a bootloader that can read package1 from the drive (hekate). */
+                    ShowFatalError("USB emummc is not supported by fusee!\nBoot with hekate instead.\n");
+                } else if (sector > 0) {
                     g_emummc_cfg.base_cfg.type = secmon::EmummcType_Partition;
                     g_emummc_cfg.partition_cfg.start_sector = sector;
                 } else if (path[0] != '\x00' && IsDirectoryExist(path)) {

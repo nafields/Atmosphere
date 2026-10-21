@@ -77,6 +77,8 @@ dist-no-debug: package3 $(CURRENT_DIRECTORY)/$(ATMOSPHERE_OUT_DIR)
 	mkdir -p config_templates/kip_patches
 	cp -r config_templates/kip_patches $(DIST_DIR)/atmosphere/kip_patches
 	cp -r config_templates/hbl_html $(DIST_DIR)/atmosphere/hbl_html
+	mkdir -p $(DIST_DIR)/atmosphere/usb_emummc_patches
+	for d in config_templates/usb_emummc_patches/*/; do [ -d "$$d" ] && cp -r "$$d" $(DIST_DIR)/atmosphere/usb_emummc_patches/; done; true
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/0100000000000008
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/010000000000000d
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/0100000000000017

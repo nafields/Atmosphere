@@ -39,6 +39,7 @@
 #define APBDEV_PMC_AUTO_WAKE_LVL_MASK    (0x0DC)
 #define APBDEV_PMC_WAKE_DELAY            (0x0E0)
 #define APBDEV_PMC_PWR_DET_VAL           (0x0E4)
+#define APBDEV_PMC_USB_AO                (0x0F0)
 #define APBDEV_PMC_DDR_PWR               (0x0E8)
 #define APBDEV_PMC_CRYPTO_OP             (0x0F4)
 #define APBDEV_PMC_WAKE2_MASK            (0x160)

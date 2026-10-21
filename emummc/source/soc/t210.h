@@ -37,6 +37,10 @@ intptr_t QueryIoMapping(u64 addr, u64 size);
 #define PWM_BASE 0x7000A000
 #define RTC_BASE 0x7000E000
 #define PMC_BASE 0x7000E400
+#define FUSE_BASE 0x7000F800
+#define XUSB_HOST_BASE 0x70090000
+#define XUSB_HOST_SIZE 0x10000
+#define XUSB_PADCTL_BASE 0x7009F000
 
 #define _REG(base, off) *(vu32 *)(QueryIoMapping((u64)base, 0) + (off))
 #define _REG_IO(base, off, size) *(vu32 *)(QueryIoMapping((u64)base, size) + (off))
@@ -73,7 +77,8 @@ intptr_t QueryIoMapping(u64 addr, u64 size);
 #define EXCP_VEC(off) _REG(EXCP_VEC_BASE, off)
 #define PWM(off) _REG(PWM_BASE, off)
 #define SYSCTR0(off) _REG(SYSCTR0_BASE, off)
-#define FUSE(off) _REG(FUSE_BASE, off)
+#define FUSE(off) _REG_IO(FUSE_BASE, off, 0x800)
+#define XUSB_PADCTL(off) _REG_IO(XUSB_PADCTL_BASE, off, 0x1000)
 #define KFUSE(off) _REG(KFUSE_BASE, off)
 #define SE(off) _REG(SE_BASE, off)
 #define MC(off) _REG(MC_BASE, off)
@@ -86,6 +91,9 @@ intptr_t QueryIoMapping(u64 addr, u64 size);
 /*! Misc registers. */
 #define APB_MISC_PP_STRAPPING_OPT_A 0x08
 #define APB_MISC_PP_PINMUX_GLOBAL 0x40
+#define APB_MISC_GP_HIDREV 0x804
+#define  GP_HIDREV_MAJOR_T210    0x1
+#define  GP_HIDREV_MAJOR_T210B01 0x2
 #define APB_MISC_GP_LCD_BL_PWM_CFGPADCTRL 0xA34
 #define APB_MISC_GP_SDMMC1_PAD_CFGPADCTRL 0xA98
 #define APB_MISC_GP_EMMC2_PAD_CFGPADCTRL 0xA9C

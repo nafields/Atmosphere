@@ -283,8 +283,18 @@ namespace ams::secmon::smc {
                     break;
                 case ConfigItem::ExosphereEmummcType:
                     /* Get what kind of emummc this unit has active. */
-                    /* NOTE: This may return values other than 1 in the future. */
-                    args.r[1] = (GetEmummcConfiguration().IsEmummcActive() ? 1 : 0);
+                    /* NOTE: SD card based emummcs (partition and file) report 1, a USB drive based one reports 3. */
+                    /* NOTE: This may return other values in the future. */
+                    {
+                        const auto &cfg = GetEmummcConfiguration();
+                        if (!cfg.IsEmummcActive()) {
+                            args.r[1] = 0;
+                        } else if (cfg.base_cfg.type == EmummcType_Usb) {
+                            args.r[1] = EmummcType_Usb;
+                        } else {
+                            args.r[1] = 1;
+                        }
+                    }
                     break;
                 case ConfigItem::ExospherePayloadAddress:
                     /* Gets the physical address of the reboot payload buffer, if one exists. */
@@ -451,7 +461,8 @@ namespace ams::secmon::smc {
                     /* No additional configuration needs to be copied. */
                     break;
                 case EmummcType_Partition:
-                    /* Copy the partition config. */
+                case EmummcType_Usb:
+                    /* Copy the partition config (a USB emummc is a raw image at a start sector too). */
                     static_assert(sizeof(cfg.base_cfg) + sizeof(cfg.partition_cfg) <= InlineOutputSize);
                     std::memcpy(inline_output + sizeof(cfg.base_cfg), std::addressof(cfg.partition_cfg), sizeof(cfg.partition_cfg));
                     break;

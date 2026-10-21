@@ -110,7 +110,7 @@ static int _i2c_send_single(u32 i2c_idx, u32 dev_addr, u8 *buf, u32 size)
 	u32 tmp = 0;
 	memcpy(&tmp, buf, size);
 
-	vu32 *base = (vu32 *)QueryIoMapping(i2c_addrs[I2C_5], 0x1000);
+	vu32 *base = (vu32 *)QueryIoMapping(i2c_addrs[i2c_idx], 0x1000);
 
 	// Set device address and send mode.
 	base[I2C_CMD_ADDR0] = dev_addr << 1 | ADDR0_WRITE;
@@ -142,7 +142,7 @@ static int _i2c_recv_single(u32 i2c_idx, u8 *buf, u32 size, u32 dev_addr)
 	if (size > 4)
 		return 0;
 
-	vu32 *base = (vu32 *)QueryIoMapping(i2c_addrs[I2C_5], 0x1000);
+	vu32 *base = (vu32 *)QueryIoMapping(i2c_addrs[i2c_idx], 0x1000);
 	// Set device address and recv mode.
 	base[I2C_CMD_ADDR0] = (dev_addr << 1) | ADDR0_READ;
 
@@ -180,7 +180,12 @@ static int _i2c_recv_single(u32 i2c_idx, u8 *buf, u32 size, u32 dev_addr)
 
 void i2c_init()
 {
-	vu32 *base = (vu32 *)QueryIoMapping(i2c_addrs[I2C_5], 0x1000);
+	i2c_init_bus(I2C_5);
+}
+
+void i2c_init_bus(u32 i2c_idx)
+{
+	vu32 *base = (vu32 *)QueryIoMapping(i2c_addrs[i2c_idx], 0x1000);
     
 	base[I2C_CLK_DIVISOR] = (5 << 16) | 1; // SF mode Div: 6, HS mode div: 2.
 	base[I2C_BUS_CLEAR_CONFIG] = (9 << 16) | BC_TERMINATE | BC_ENABLE;

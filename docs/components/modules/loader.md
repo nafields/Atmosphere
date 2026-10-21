@@ -64,6 +64,12 @@ This organization allows patch sets affecting multiple NSOs to be distributed as
 
 Patch files are accepted in either IPS format or IPS32 format.
 
+When the active emuMMC is a raw image on a USB drive (see [USB emuMMC](../../features/usb_emummc.md)), loader additionally searches:
+```
+/atmosphere/usb_emummc_patches/<patchset name>/<nso build id>.ips
+```
+These patch sets are applied with the same rules, but only on a USB emuMMC boot. They are meant for the patches that keep the `usb` system module away from the XUSB host controller, which the emuMMC driver owns on such a boot, without affecting sysMMC or SD card emuMMC boots from the same SD card.
+
 Because NSO files are compressed, patch files are not made between the original version of a compressed NSO and the modified version of such an NSO. Instead, they are made between the uncompressed version of an NSO and the modified (and still uncompressed) version of that NSO. This also means that a patch file cannot be manually applied to the compressed version of an NSO; it must be applied to the uncompressed version. Atmosphère's reimplementation will correctly apply these patches while loading the process regardless of whether the NSO it finds is compressed or not.
 
 When authoring patches, [hactool](https://github.com/SciresM/hactool) can be used to find an NSO's build ID and to uncompress NSOs. Recent versions of the [ReSwitched IDA loaders](https://github.com/reswitched/loaders) can be used to load uncompressed NSOs into IDA in such a way that you can [apply patches to the input file](https://www.hex-rays.com/products/ida/support/idadoc/1618.shtml). From there, any IPS tool can be used to create the patch between the original NSO and the patched NSO. Note that if the NSO you are patching is larger than 16 MiB, you will have to use a tool that supports IPS32.

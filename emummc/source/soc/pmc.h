@@ -23,15 +23,19 @@
 #define  PMC_CNTRL_MAIN_RST (1 << 4)
 #define APBDEV_PMC_SEC_DISABLE 0x4
 #define APBDEV_PMC_PWRGATE_TOGGLE 0x30
+#define APBDEV_PMC_REMOVE_CLAMPING_CMD 0x34
 #define APBDEV_PMC_PWRGATE_STATUS 0x38
 #define APBDEV_PMC_NO_IOPOWER 0x44
 #define  PMC_NO_IOPOWER_SDMMC1_IO_EN (1 << 12)
+#define  PMC_NO_IOPOWER_GPIO         (1 << 21)
 #define APBDEV_PMC_SCRATCH0 0x50
 #define APBDEV_PMC_SCRATCH1 0x54
 #define APBDEV_PMC_SCRATCH20 0xA0
 #define APBDEV_PMC_PWR_DET_VAL 0xE4
 #define  PMC_PWR_DET_SDMMC1_IO_EN (1 << 12)
+#define  PMC_PWR_DET_33V_GPIO     (1 << 21)
 #define APBDEV_PMC_DDR_PWR 0xE8
+#define APBDEV_PMC_USB_AO 0xF0
 #define APBDEV_PMC_CRYPTO_OP 0xF4
 #define  PMC_CRYPTO_OP_SE_ENABLE  0
 #define  PMC_CRYPTO_OP_SE_DISABLE 1
@@ -71,5 +75,18 @@
 #define APBDEV_PMC_SCRATCH188 0x810
 #define APBDEV_PMC_SCRATCH190 0x818
 #define APBDEV_PMC_SCRATCH200 0x840
+
+/*! Power gated partitions (APBDEV_PMC_PWRGATE_TOGGLE / STATUS bit index). */
+#define POWER_RAIL_XUSBA 20
+#define POWER_RAIL_XUSBB 21
+#define POWER_RAIL_XUSBC 22
+
+#include "../utils/types.h"
+
+/* The PMC is not mappable from userland on 2.0.0+: accesses go through the
+ * secure monitor's register access SMC (whitelisted registers only). */
+u32  pmc_read(u32 off);
+void pmc_write(u32 off, u32 value, u32 mask); /* reg = (reg & ~mask) | (value & mask) */
+int  pmc_enable_partition(u32 part, u32 enable);
 
 #endif

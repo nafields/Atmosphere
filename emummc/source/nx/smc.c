@@ -159,6 +159,29 @@ Result smcReadWriteRegister(u32 phys_addr, u32 value, u32 mask)
     return rc;
 }
 
+Result smcReadWriteRegisterOut(u32 phys_addr, u32 value, u32 mask, u32 *out)
+{
+    SecmonArgs args;
+    args.X[0] = 0xF0000002; /* smcAmsReadWriteRegister */
+    args.X[1] = phys_addr;  /* MMIO address */
+    args.X[2] = mask;       /* mask */
+    args.X[3] = value;      /* value */
+    Result rc = svcCallSecureMonitor(&args);
+    if (rc == 0)
+    {
+        if (args.X[0] != 0)
+        {
+            /* SPL result n = SMC result n */
+            rc = (26u | ((u32)args.X[0] << 9u));
+        }
+        else if (out)
+        {
+            *out = (u32)args.X[1];
+        }
+    }
+    return rc;
+}
+
 Result smcGetEmummcConfig(exo_emummc_mmc_t mmc_id, exo_emummc_config_t *out_cfg, void *out_paths)
 {
     SecmonArgs args;

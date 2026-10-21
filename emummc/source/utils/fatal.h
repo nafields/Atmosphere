@@ -36,6 +36,11 @@ enum FatalReason
     Fatal_FatfsFileOpen,
     Fatal_FatfsMemExhaustion,
     Fatal_InvalidEnum,
+    Fatal_UsbFirmware,     /* XUSB firmware file missing or invalid on the SD card. */
+    Fatal_UsbDma,          /* Could not map the DMA block into the XUSB host address space. */
+    Fatal_UsbHost,         /* XUSB host controller bring-up failed. */
+    Fatal_UsbNoDrive,      /* No USB mass storage drive found. */
+    Fatal_UsbDrive,        /* Drive not ready, unsupported sector size, or emuMMC outside it. */
     Fatal_Max
 };
 

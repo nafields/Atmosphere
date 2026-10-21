@@ -33,8 +33,36 @@ SVC_BEGIN svcLegacyQueryIoMapping
 	RET
 SVC_END
 
+SVC_BEGIN svcSleepThread
+	SVC 0xB
+	RET
+SVC_END
+
+SVC_BEGIN svcCreateDeviceAddressSpace
+	STR X0, [SP, #-16]!
+	SVC 0x56
+	LDR X2, [SP], #16
+	STR W1, [X2]
+	RET
+SVC_END
+
 SVC_BEGIN svcAttachDeviceAddressSpace
 	SVC 0x57
+	RET
+SVC_END
+
+SVC_BEGIN svcDetachDeviceAddressSpace
+	SVC 0x58
+	RET
+SVC_END
+
+SVC_BEGIN svcMapDeviceAddressSpaceAligned
+	SVC 0x5A
+	RET
+SVC_END
+
+SVC_BEGIN svcUnmapDeviceAddressSpace
+	SVC 0x5C
 	RET
 SVC_END
 

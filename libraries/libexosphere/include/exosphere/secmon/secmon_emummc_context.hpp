@@ -22,6 +22,7 @@ namespace ams::secmon {
         EmummcType_None      = 0,
         EmummcType_Partition = 1,
         EmummcType_File      = 2,
+        EmummcType_Usb       = 3, /* Raw image on a USB mass storage drive (partition_cfg). */
     };
 
     enum EmummcMmc {

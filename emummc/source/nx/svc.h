@@ -36,6 +36,7 @@ typedef struct {
 
 _Static_assert(sizeof(SecmonArgs) == 0x40, "SecmonArgs definition");
 
+#define DeviceName_XUSB_HOST 14
 #define DeviceName_SDMMC1A 19
 #define DeviceName_SDMMC2A 20
 #define DeviceName_SDMMC3A 21
@@ -62,6 +63,41 @@ Result svcQueryIoMapping(u64* virtaddr, u64* out_size, u64 physaddr, u64 size);
  * @warning Only exists on [1.0.0-9.2.0]. For newer versions use \ref svcQueryIoMapping.
  */
 Result svcLegacyQueryIoMapping(u64* virtaddr, u64 physaddr, u64 size);
+
+/**
+ * @brief Sleeps the current thread for the specified amount of time.
+ * @param[in] nano Number of nanoseconds to sleep for.
+ * @note Syscall number 0x0B.
+ */
+void svcSleepThread(s64 nano);
+
+/**
+ * @brief Creates a virtual address space for binding device address spaces.
+ * @return Result code.
+ * @note Syscall number 0x56.
+ */
+Result svcCreateDeviceAddressSpace(Handle *handle, u64 dev_addr, u64 dev_size);
+
+/**
+ * @brief Detaches a device address space from a device.
+ * @return Result code.
+ * @note Syscall number 0x58.
+ */
+Result svcDetachDeviceAddressSpace(u64 device, Handle handle);
+
+/**
+ * @brief Maps an attached device address space to an user address space.
+ * @return Result code.
+ * @note Syscall number 0x5A.
+ */
+Result svcMapDeviceAddressSpaceAligned(Handle handle, Handle proc_handle, u64 map_addr, u64 dev_size, u64 dev_addr, u32 perm);
+
+/**
+ * @brief Unmaps an attached device address space from an user address space.
+ * @return Result code.
+ * @note Syscall number 0x5C.
+ */
+Result svcUnmapDeviceAddressSpace(Handle handle, Handle proc_handle, u64 map_addr, u64 map_size, u64 dev_addr);
 
 /**
  * @brief Attaches a device address space to a device.

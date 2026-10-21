@@ -349,7 +349,7 @@ static void load_emummc_ctx(void)
         emuMMC_ctx.id = config.base_cfg.id;
         emuMMC_ctx.EMMC_Type = (enum emuMMC_Type)config.base_cfg.type;
         emuMMC_ctx.fs_ver = (enum FS_VER)config.base_cfg.fs_version;
-        if (emuMMC_ctx.EMMC_Type == emuMMC_SD_Raw)
+        if (emuMMC_ctx.EMMC_Type == emuMMC_SD_Raw || emuMMC_ctx.EMMC_Type == emuMMC_USB_Raw)
         {
             emuMMC_ctx.EMMC_StoragePartitionOffset = config.partition_cfg.start_sector;
         }
